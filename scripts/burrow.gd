@@ -1,6 +1,6 @@
 class_name Burrow
 extends Node2D
-## The rabbit's home. Foxes gnaw on it when they reach it.
+## The rabbit's home. Foxes gnaw on it when they reach it, hearts repair it.
 
 signal damaged
 
@@ -13,6 +13,11 @@ func take_damage(amount := 1) -> void:
 		return
 	hp = maxi(hp - amount, 0)
 	damaged.emit()
+	queue_redraw()
+
+
+func heal(amount := 2) -> void:
+	hp = mini(hp + amount, max_hp)
 	queue_redraw()
 
 

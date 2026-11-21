@@ -11,6 +11,22 @@ Foxes spawn at the top of the screen and shuffle toward your burrow at the
 bottom. Shoot them with carrots before they chew through it. The burrow has
 10 HP, and the waves speed up as your score grows.
 
+### Weapon upgrades
+
+Your weapon improves automatically at score milestones (bring on the toast
+message to confirm):
+
+- **Score 5**: faster firing
+- **Score 12**: double carrots (spread shot)
+- **Score 22**: triple carrots
+- **Score 35**: rapid fire
+- **Score 50**: machine carrot
+
+### Heart pickups
+
+Whenever the burrow is damaged, hearts occasionally drift down from the sky.
+Catch one with the rabbit to repair it by 2 HP.
+
 ## Controls
 
 | Input | Action |
@@ -39,12 +55,13 @@ burrow-defender/
     ├── burrow.gd
     ├── player.gd
     ├── fox.gd
-    └── carrot.gd
+    ├── carrot.gd
+    └── pickup.gd
 ```
 
 ## Ideas for the future
 
 - Sound effects and music
 - A second fox type that moves in bursts or throws acorns
-- HP pickups dropped by foxes
+- A boss fox every 100 points
 - High score persistence between runs

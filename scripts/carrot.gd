@@ -1,8 +1,14 @@
 class_name Carrot
 extends Area2D
-## A carrot projectile. Flies upward and pops foxes.
+## A carrot projectile. Flies in a straight line and pops foxes.
 
 const SPEED := 650.0
+
+var _dir := Vector2.UP
+
+
+func setup(dir: Vector2) -> void:
+	_dir = dir.normalized()
 
 
 func _ready() -> void:
@@ -16,8 +22,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	position.y -= SPEED * delta
-	if position.y < -40:
+	position += _dir * SPEED * delta
+	if position.y < -40 or position.x < -40 or position.x > 760:
 		queue_free()
 
 

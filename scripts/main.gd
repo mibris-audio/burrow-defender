@@ -1,22 +1,27 @@
 extends Node2D
-## Burrow Defender entry point: builds the world, HUD, spawning and game state.
+## Burrow Defender entry point: builds the world, HUD, spawning, upgrades and game state.
 
 const SCREEN := Vector2(720, 960)
 const BURROW_POS := Vector2(360, 905)
 
 const FoxScript := preload("res://scripts/fox.gd")
 const CarrotScript := preload("res://scripts/carrot.gd")
+const HeartScript := preload("res://scripts/pickup.gd")
 
 var burrow: Burrow
 var player: PlayerRabbit
 var hud: CanvasLayer
 var score_label: Label
 var hp_label: Label
+var toast_label: Label
 var game_over_panel: Control
+var game_over_label: Label
+var _toast_tween: Tween
 
 var score := 0
 var spawn_interval := 2.2
 var spawn_timer := 1.5
+var pickup_timer := 9.0
 var game_over := false
 var rng := RandomNumberGenerator.new()
 
@@ -59,6 +64,13 @@ func _physics_process(delta: float) -> void:
 		spawn_timer = spawn_interval
 		_spawn_fox()
 
+	pickup_timer -= delta
+	if pickup_timer <= 0.0:
+		pickup_timer = rng.randf_range(8.0, 14.0)
+		# Only bother dropping hearts when the burrow is actually hurt.
+		if burrow.hp < burrow.max_hp:
+			_spawn_heart()
+
 
 func _spawn_fox() -> void:
 	var fox: Fox = FoxScript.new()
@@ -75,10 +87,25 @@ func _spawn_fox() -> void:
 		spawn_interval -= 0.1
 
 
-func _on_player_shot(pos: Vector2) -> void:
+func _spawn_heart() -> void:
+	var heart: HeartPickup = HeartScript.new()
+	heart.player = player
+	heart.position = Vector2(rng.randf_range(60, SCREEN.x - 60), -30)
+	heart.collected.connect(_on_heart_collected)
+	add_child(heart)
+
+
+func _on_player_shot(pos: Vector2, dir: Vector2) -> void:
 	var carrot: Carrot = CarrotScript.new()
 	carrot.position = pos
+	carrot.setup(dir)
 	add_child(carrot)
+
+
+func _on_heart_collected(_heart) -> void:
+	burrow.heal(2)
+	_update_hud()
+	_show_toast("Burrow repaired: +2")
 
 
 func _on_fox_reached_burrow(_fox) -> void:
@@ -87,7 +114,27 @@ func _on_fox_reached_burrow(_fox) -> void:
 
 func _on_fox_killed(_fox) -> void:
 	score += 1
+	_check_upgrades()
 	_update_hud()
+
+
+func _check_upgrades() -> void:
+	match score:
+		5:
+			player.upgrade_fire_rate()
+			_show_toast("Upgrade: faster shooting!")
+		12:
+			player.upgrade_multishot()
+			_show_toast("Upgrade: double carrots!")
+		22:
+			player.upgrade_multishot()
+			_show_toast("Upgrade: triple carrots!")
+		35:
+			player.upgrade_fire_rate()
+			_show_toast("Upgrade: rapid fire!")
+		50:
+			player.upgrade_fire_rate()
+			_show_toast("Upgrade: machine carrot!")
 
 
 func _on_burrow_damaged() -> void:
@@ -98,7 +145,18 @@ func _on_burrow_damaged() -> void:
 
 func _set_game_over() -> void:
 	game_over = true
+	game_over_label.text = "The foxes got in!\n\nScore: %d\n\nPress R to try again" % score
 	game_over_panel.visible = true
+
+
+func _show_toast(text: String) -> void:
+	toast_label.text = text
+	if _toast_tween and _toast_tween.is_valid():
+		_toast_tween.kill()
+	toast_label.modulate.a = 1.0
+	_toast_tween = create_tween()
+	_toast_tween.tween_interval(1.6)
+	_toast_tween.tween_property(toast_label, "modulate:a", 0.0, 0.6)
 
 
 func _build_hud() -> void:
@@ -115,6 +173,15 @@ func _build_hud() -> void:
 	hp_label.add_theme_font_size_override("font_size", 26)
 	hud.add_child(hp_label)
 
+	toast_label = Label.new()
+	toast_label.position = Vector2(0, 110)
+	toast_label.size = Vector2(720, 40)
+	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast_label.add_theme_font_size_override("font_size", 30)
+	toast_label.add_theme_color_override("font_color", Color("ffd966"))
+	toast_label.modulate.a = 0.0
+	hud.add_child(toast_label)
+
 	game_over_panel = Control.new()
 	game_over_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	game_over_panel.visible = false
@@ -125,14 +192,14 @@ func _build_hud() -> void:
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	game_over_panel.add_child(dim)
 
-	var msg := Label.new()
-	msg.text = "The foxes got in!\n\nScore: %d\n\nPress R to try again"
-	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	msg.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	msg.add_theme_font_size_override("font_size", 44)
-	msg.add_theme_color_override("font_color", Color.WHITE)
-	msg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	game_over_panel.add_child(msg)
+	game_over_label = Label.new()
+	game_over_label.text = ""
+	game_over_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_over_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	game_over_label.add_theme_font_size_override("font_size", 44)
+	game_over_label.add_theme_color_override("font_color", Color.WHITE)
+	game_over_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over_panel.add_child(game_over_label)
 
 	_update_hud()
 
