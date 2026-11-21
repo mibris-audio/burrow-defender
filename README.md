@@ -11,21 +11,24 @@ Foxes spawn at the top of the screen and shuffle toward your burrow at the
 bottom. Shoot them with carrots before they chew through it. The burrow has
 10 HP, and the waves speed up as your score grows.
 
-### Weapon upgrades
+### Falling pickups
 
-Your weapon improves automatically at score milestones (bring on the toast
-message to confirm):
+Keep an eye on the sky and catch things with the rabbit:
 
-- **Score 5**: faster firing
-- **Score 12**: double carrots (spread shot)
-- **Score 22**: triple carrots
-- **Score 35**: rapid fire
-- **Score 50**: machine carrot
+- **Hearts** (pink) drift down now and then while the burrow is damaged and
+  repair it by 2 HP.
+- **Upgrade crates** (orange, white arrow) drop when you reach a score
+  milestone. Catch one to improve your weapon:
 
-### Heart pickups
+| Milestone | Crate contents |
+| --- | --- |
+| Score 5 | Faster firing |
+| Score 12 | Double carrots (spread shot) |
+| Score 22 | Triple carrots |
+| Score 35 | Rapid fire |
+| Score 50 | Machine carrot |
 
-Whenever the burrow is damaged, hearts occasionally drift down from the sky.
-Catch one with the rabbit to repair it by 2 HP.
+Miss a crate and it is gone, so collect them before they hit the ground.
 
 ## Controls
 

@@ -6,7 +6,16 @@ const BURROW_POS := Vector2(360, 905)
 
 const FoxScript := preload("res://scripts/fox.gd")
 const CarrotScript := preload("res://scripts/carrot.gd")
-const HeartScript := preload("res://scripts/pickup.gd")
+const PickupScript := preload("res://scripts/pickup.gd")
+
+# Score milestones that drop a weapon upgrade crate.
+const UPGRADE_MILESTONES := {
+	5: "fire_rate",
+	12: "multishot",
+	22: "multishot",
+	35: "fire_rate",
+	50: "fire_rate",
+}
 
 var burrow: Burrow
 var player: PlayerRabbit
@@ -87,12 +96,21 @@ func _spawn_fox() -> void:
 		spawn_interval -= 0.1
 
 
+func _spawn_pickup(pickup: Pickup) -> void:
+	pickup.player = player
+	pickup.position = Vector2(rng.randf_range(60, SCREEN.x - 60), -30)
+	pickup.collected.connect(_on_pickup_collected)
+	add_child(pickup)
+
+
 func _spawn_heart() -> void:
-	var heart: HeartPickup = HeartScript.new()
-	heart.player = player
-	heart.position = Vector2(rng.randf_range(60, SCREEN.x - 60), -30)
-	heart.collected.connect(_on_heart_collected)
-	add_child(heart)
+	_spawn_pickup(PickupScript.new())
+
+
+func _spawn_upgrade_drop(type: String) -> void:
+	var pickup: Pickup = PickupScript.new()
+	pickup.setup_upgrade(type)
+	_spawn_pickup(pickup)
 
 
 func _on_player_shot(pos: Vector2, dir: Vector2) -> void:
@@ -102,10 +120,20 @@ func _on_player_shot(pos: Vector2, dir: Vector2) -> void:
 	add_child(carrot)
 
 
-func _on_heart_collected(_heart) -> void:
-	burrow.heal(2)
-	_update_hud()
-	_show_toast("Burrow repaired: +2")
+func _on_pickup_collected(pickup) -> void:
+	match pickup.kind:
+		Pickup.HEART:
+			burrow.heal(2)
+			_update_hud()
+			_show_toast("Burrow repaired: +2")
+		Pickup.UPGRADE:
+			match pickup.upgrade_type:
+				"fire_rate":
+					player.upgrade_fire_rate()
+					_show_toast("Weapon upgrade: faster shooting!")
+				"multishot":
+					player.upgrade_multishot()
+					_show_toast("Weapon upgrade: more carrots!")
 
 
 func _on_fox_reached_burrow(_fox) -> void:
@@ -119,22 +147,8 @@ func _on_fox_killed(_fox) -> void:
 
 
 func _check_upgrades() -> void:
-	match score:
-		5:
-			player.upgrade_fire_rate()
-			_show_toast("Upgrade: faster shooting!")
-		12:
-			player.upgrade_multishot()
-			_show_toast("Upgrade: double carrots!")
-		22:
-			player.upgrade_multishot()
-			_show_toast("Upgrade: triple carrots!")
-		35:
-			player.upgrade_fire_rate()
-			_show_toast("Upgrade: rapid fire!")
-		50:
-			player.upgrade_fire_rate()
-			_show_toast("Upgrade: machine carrot!")
+	if UPGRADE_MILESTONES.has(score):
+		_spawn_upgrade_drop(UPGRADE_MILESTONES[score])
 
 
 func _on_burrow_damaged() -> void:
