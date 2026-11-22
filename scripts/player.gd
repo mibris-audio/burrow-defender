@@ -5,6 +5,7 @@ extends Node2D
 
 signal shot(pos: Vector2, dir: Vector2)
 
+const SPEED := 320.0
 const CARROT_SPEED := 650.0
 const SHOT_COOLDOWN_START := 0.28
 const SPREAD_DEGREES := 14.0
